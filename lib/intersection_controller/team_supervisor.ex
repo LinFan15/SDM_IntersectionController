@@ -42,7 +42,8 @@ defmodule IntersectionController.TeamSupervisor do
          subscriptions: subscriptions,
          will: %Tortoise.Package.Publish{
            topic: "#{teamnr}/features/lifecycle/controller/ondisconnect",
-           payload: ""
+           payload: "",
+           qos: 1
          }
        ]},
       {

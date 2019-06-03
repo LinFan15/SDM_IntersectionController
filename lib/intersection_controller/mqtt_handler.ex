@@ -10,6 +10,7 @@ defmodule IntersectionController.MQTTHandler do
 
   def connection(:up, [teamnr, message_handler]) do
     :logger.info("MQTT Client for team nr. #{teamnr} connected to broker.")
+    IntersectionController.MQTTMessageHandler.connected(message_handler)
     {:ok, [teamnr, message_handler]}
   end
 
