@@ -56,7 +56,7 @@ defmodule IntersectionController.TrafficHandler do
     IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
     Process.sleep(group_map.duration.gate)
 
-    wait_for_sensor(processor, "#{group}/sensor/1", false)
+    wait_for_sensor(processor, ["#{group}/sensor/1"], false, 0)
 
     type = Map.fetch!(group_map.items, "/gate/2").type
     state = IntersectionController.TrafficModel.get_traffic_light_state(type, :end)
@@ -87,8 +87,7 @@ defmodule IntersectionController.TrafficHandler do
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :end)
       messages = [{"/vessel/1/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
-      wait_for_sensor(processor, "/vessel/1/sensor/1", false)
-      wait_for_sensor(processor, "/vessel/3/sensor/1", false)
+      wait_for_sensor(processor, ["/vessel/1/sensor/1", "/vessel/3/sensor/1"], false, 1000)
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :initial)
       messages = [{"/vessel/1/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
@@ -100,8 +99,7 @@ defmodule IntersectionController.TrafficHandler do
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :end)
       messages = [{"/vessel/2/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
-      wait_for_sensor(processor, "/vessel/2/sensor/1", false)
-      wait_for_sensor(processor, "/vessel/3/sensor/1", false)
+      wait_for_sensor(processor, ["/vessel/2/sensor/1", "/vessel/3/sensor/1"], false, 1000)
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :initial)
       messages = [{"/vessel/2/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
@@ -151,12 +149,32 @@ defmodule IntersectionController.TrafficHandler do
     send(from, {:associated_stopped, group})
   end
 
-  def wait_for_sensor(processor, sensor, state) do
+  def wait_for_sensor(processor, [sensor], state, timeout) do
+    Process.sleep(timeout)
+
     if IntersectionController.Processor.get_sensor(processor, sensor) == state do
       {:ok}
     else
       Process.sleep(100)
-      wait_for_sensor(processor, sensor, state)
+      wait_for_sensor(processor, [sensor], state, timeout)
+    end
+  end
+
+  def wait_for_sensor(processor, [sensor1, sensor2], state, timeout) do
+    if IntersectionController.Processor.get_sensor(processor, sensor1) == state and
+         IntersectionController.Processor.get_sensor(processor, sensor2) == state do
+      Process.sleep(timeout)
+
+      if IntersectionController.Processor.get_sensor(processor, sensor1) == state and
+           IntersectionController.Processor.get_sensor(processor, sensor2) == state do
+        {:ok}
+      else
+        Process.sleep(100)
+        wait_for_sensor(processor, [sensor1, sensor2], state, timeout)
+      end
+    else
+      Process.sleep(100)
+      wait_for_sensor(processor, [sensor1, sensor2], state, timeout)
     end
   end
 end
