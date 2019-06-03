@@ -10,6 +10,10 @@ defmodule IntersectionController.MQTTMessageHandler do
     GenServer.start_link(__MODULE__, {processor, client_id, teamnr}, opts)
   end
 
+  def connected(server) do
+    GenServer.cast(server, {:connected})
+  end
+
   def onconnect(server) do
     GenServer.cast(server, {:onconnect})
   end
@@ -32,6 +36,11 @@ defmodule IntersectionController.MQTTMessageHandler do
 
   def init({processor, client_id, teamnr}) do
     {:ok, {processor, client_id, teamnr}}
+  end
+
+  def handle_cast({:connected}, {processor, client_id, teamnr}) do
+    Tortoise.publish(client_id, "#{teamnr}/features/lifecycle/controller/onconnect", "", qos: 1)
+    {:noreply, {processor, client_id, teamnr}}
   end
 
   def handle_cast({:onconnect}, {processor, client_id, teamnr}) do
