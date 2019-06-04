@@ -87,7 +87,7 @@ defmodule IntersectionController.TrafficHandler do
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :end)
       messages = [{"/vessel/1/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
-      wait_for_sensor(processor, ["/vessel/1/sensor/1", "/vessel/3/sensor/1"], false, 1000)
+      wait_for_sensor(processor, ["/vessel/1/sensor/1", "/vessel/3/sensor/1"], false, 2000)
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :initial)
       messages = [{"/vessel/1/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
@@ -99,7 +99,7 @@ defmodule IntersectionController.TrafficHandler do
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :end)
       messages = [{"/vessel/2/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
-      wait_for_sensor(processor, ["/vessel/2/sensor/1", "/vessel/3/sensor/1"], false, 1000)
+      wait_for_sensor(processor, ["/vessel/2/sensor/1", "/vessel/3/sensor/1"], false, 2000)
       new_state = IntersectionController.TrafficModel.get_traffic_light_state("RTG", :initial)
       messages = [{"/vessel/2/light/1", new_state}]
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
@@ -138,7 +138,7 @@ defmodule IntersectionController.TrafficHandler do
       for light <- lights do
         type = Map.fetch!(group_map.items, light).type
 
-        state = IntersectionController.TrafficModel.get_traffic_light_state(type, :end)
+        state = IntersectionController.TrafficModel.get_traffic_light_state(type, :initial)
 
         {"#{group}#{light}", state}
       end

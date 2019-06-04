@@ -47,7 +47,7 @@ defmodule IntersectionController.MQTTMessageHandler do
     groups = IntersectionController.Processor.reset_and_get_initial_state(processor)
 
     for {group, state} <- groups do
-      Tortoise.publish(client_id, "#{teamnr}#{group}", state, qos: 1)
+      Tortoise.publish(client_id, "#{teamnr}#{group}", "#{state}", qos: 1)
     end
 
     {:noreply, {processor, client_id, teamnr}}

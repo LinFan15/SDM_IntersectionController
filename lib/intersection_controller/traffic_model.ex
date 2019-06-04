@@ -146,7 +146,6 @@ defmodule IntersectionController.TrafficModel do
       when map_size(current_solution) > 0 do
     if :queue.is_empty(queue) do
       queue = :queue.from_list(put_back)
-      :logger.warning(inspect(queue))
       {current_solution, queue}
     else
       {{:value, group}, queue} = :queue.out(queue)

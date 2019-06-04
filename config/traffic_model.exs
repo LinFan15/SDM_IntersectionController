@@ -159,7 +159,7 @@ config :intersection_controller, :traffic_model, %{
       "/light/1" => %{
         :type => "RTG"
       },
-      "light/2" => %{
+      "/light/2" => %{
         :type => "RTG"
       }
     },
