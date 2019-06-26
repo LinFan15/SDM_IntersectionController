@@ -1,4 +1,7 @@
 defmodule IntersectionController.TeamSupervisor do
+  @moduledoc """
+  Supervises all processes required to control a single simulator.
+  """
   use Supervisor
 
   def start_link(opts) do
@@ -7,6 +10,7 @@ defmodule IntersectionController.TeamSupervisor do
   end
 
   def init(opts) do
+    # Get configuration parameters
     teamnr = Keyword.fetch!(opts, :teamnr)
     topics = Keyword.fetch!(opts, :topics)
     traffic_model = Keyword.fetch!(opts, :traffic_model)

@@ -1,5 +1,12 @@
 defmodule IntersectionController.TrafficHandler do
+  @moduledoc """
+  Handles messaging to simulator for every traffic group.
+  Each traffic group gets it's own process running the handle_traffic_group function.
+  """
+  @spec handle_traffic_group(atom, atom, atom, pid, String.t(), map) :: any
   def handle_traffic_group(message_handler, task_supervisor, processor, from, group, group_map) do
+    # Check if there are any associated traffic groups (e.g. bridges) present in the current traffic group.
+    # When present, the processing of the current traffic group is stopped and the associated traffic group is handled instead.
     if Map.size(group_map.associated) == 0 do
       messages = IntersectionController.TrafficModel.messages_from_group(group, group_map, :end)
       IntersectionController.MQTTMessageHandler.publish(message_handler, messages)
@@ -19,7 +26,9 @@ defmodule IntersectionController.TrafficHandler do
     else
       associated_started =
         for {associated_group, associated_map} <- group_map.associated do
+          # For now, only bridges are supported; more associated group types could be added later.
           if String.contains?(associated_group, "bridge") do
+            # Start new process to handle the bridge, tell the main loop an associated group is running, and exit the current process.
             Task.Supervisor.start_child(task_supervisor, fn ->
               handle_bridge(message_handler, processor, from, associated_group, associated_map)
             end)
@@ -32,6 +41,7 @@ defmodule IntersectionController.TrafficHandler do
     end
   end
 
+  @spec handle_bridge(atom, atom, pid, String.t(), map) :: any
   defp handle_bridge(message_handler, processor, from, group, group_map) do
     lights =
       group_map.items
@@ -149,6 +159,7 @@ defmodule IntersectionController.TrafficHandler do
     send(from, {:associated_stopped, group})
   end
 
+  @spec wait_for_sensor(atom, [String.t()], boolean, integer) :: any
   def wait_for_sensor(processor, [sensor], state, timeout) do
     Process.sleep(timeout)
 
@@ -160,6 +171,7 @@ defmodule IntersectionController.TrafficHandler do
     end
   end
 
+  @spec wait_for_sensor(atom, [String.t()], boolean, integer) :: any
   def wait_for_sensor(processor, [sensor1, sensor2], state, timeout) do
     if IntersectionController.Processor.get_sensor(processor, sensor1) == state and
          IntersectionController.Processor.get_sensor(processor, sensor2) == state do

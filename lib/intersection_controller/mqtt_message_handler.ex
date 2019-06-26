@@ -1,4 +1,7 @@
 defmodule IntersectionController.MQTTMessageHandler do
+  @moduledoc """
+  Offloads MQTT message handling from MQTTHandler to prevent slowdown in Tortoise process.
+  """
   use GenServer
 
   require Logger
@@ -38,12 +41,18 @@ defmodule IntersectionController.MQTTMessageHandler do
     {:ok, {processor, client_id, teamnr}}
   end
 
+  @spec handle_cast({:connected}, {atom, String.t(), integer}) ::
+          {:noreply, {atom, String.t(), integer}}
   def handle_cast({:connected}, {processor, client_id, teamnr}) do
+    # Publish onconnect message when the controller comes online.
     Tortoise.publish(client_id, "#{teamnr}/features/lifecycle/controller/onconnect", "", qos: 1)
     {:noreply, {processor, client_id, teamnr}}
   end
 
+  @spec handle_cast({:onconnect}, {atom, String.t(), integer}) ::
+          {:noreply, {atom, String.t(), integer}}
   def handle_cast({:onconnect}, {processor, client_id, teamnr}) do
+    # Send initial state to simulator when the simulator connects.
     groups = IntersectionController.Processor.reset_and_get_initial_state(processor)
 
     for {group, state} <- groups do
@@ -53,12 +62,20 @@ defmodule IntersectionController.MQTTMessageHandler do
     {:noreply, {processor, client_id, teamnr}}
   end
 
+  @spec handle_cast({:ondisconnect}, {atom, String.t(), integer}) ::
+          {:noreply, {atom, String.t(), integer}}
   def handle_cast({:ondisconnect}, {processor, client_id, teamnr}) do
+    # Reset controller state when the simulator disconnects.
     IntersectionController.Processor.reset_and_get_initial_state(processor)
 
     {:noreply, {processor, client_id, teamnr}}
   end
 
+  @spec handle_cast(
+          {:sensor, String.t(), String.t(), String.t(), String.t()},
+          {atom, String.t(), integer}
+        ) ::
+          {:noreply, {atom, String.t(), integer}}
   def handle_cast(
         {:sensor, user_type, group_id, component_id, state},
         {processor, client_id, teamnr}
@@ -75,6 +92,12 @@ defmodule IntersectionController.MQTTMessageHandler do
     {:noreply, {processor, client_id, teamnr}}
   end
 
+  @spec handle_call(
+          {:publish, list({String.t(), String.t()})},
+          {pid, any},
+          {atom, String.t(), integer}
+        ) ::
+          {:reply, :ok, {atom, String.t(), integer}}
   def handle_call({:publish, messages}, _from, {processor, client_id, teamnr}) do
     for {topic, payload} <- messages do
       Tortoise.publish(client_id, "#{teamnr}#{topic}", "#{payload}", qos: 1)
@@ -83,6 +106,7 @@ defmodule IntersectionController.MQTTMessageHandler do
     {:reply, :ok, {processor, client_id, teamnr}}
   end
 
+  @spec handle_info(any, tuple) :: {:noreply, tuple}
   def handle_info(_msg, state) do
     {:noreply, state}
   end

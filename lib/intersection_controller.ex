@@ -1,7 +1,15 @@
 defmodule IntersectionController do
+  @moduledoc """
+  Initializes and runs the main application loop for every registered simulator.
+  """
   require Logger
 
+  @doc """
+  Initializes the application.
+  """
+  @spec initialize(list(integer), list(String.t()), map) :: list({:ok, pid})
   def initialize(group_numbers, topics, traffic_model) do
+    # Start a new TeamSupervisor for every registered simulator.
     for n <- group_numbers do
       {:ok, _pid} =
         DynamicSupervisor.start_child(
@@ -17,7 +25,12 @@ defmodule IntersectionController do
     end
   end
 
+  @doc """
+  The main application loop. There is a seperate instance of this function running for every registered simulator.
+  """
+  @spec loop(integer, atom, atom, atom, list(String.t())) :: no_return
   def loop(teamnr, message_handler, task_supervisor, processor, associated_running) do
+    # Process associated group lifecycle messages from the handle_traffic_group function.
     associated_running =
       receive do
         {:associated_started, groups} ->
@@ -32,10 +45,13 @@ defmodule IntersectionController do
 
     solution = IntersectionController.Processor.get_solution(processor)
 
+    # Solution will be empty when there are no traffic groups left in the queue in the Processor process.
     if solution != %{} do
       :logger.info(Map.keys(solution) |> Enum.join(" "))
       pid = self()
 
+      # Start a new process to handle each traffic group.
+      # Ignore traffic group if any of it's associated groups are still running.
       tasks =
         for {group, group_map} <- solution,
             not IntersectionController.TrafficModel.associated_running?(
@@ -57,6 +73,7 @@ defmodule IntersectionController do
           )
         end
 
+      # Wait for all spawned processes to finish.
       Task.yield_many(tasks, :infinity)
       loop(teamnr, message_handler, task_supervisor, processor, associated_running)
     else

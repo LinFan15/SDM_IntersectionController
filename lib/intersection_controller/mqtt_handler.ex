@@ -1,4 +1,7 @@
 defmodule IntersectionController.MQTTHandler do
+  @moduledoc """
+  Implementation of Tortoise.Handler behaviour for IntersectionController.
+  """
   require Logger
 
   use Tortoise.Handler

@@ -29,11 +29,14 @@ use Mix.Config
 #
 #     import_config "#{Mix.env()}.exs"
 
-config :intersection_controller, :team_numbers, [5]
+# Team numbers of simulators which should be managed by this controller.
+config :intersection_controller, :team_numbers, [1, 2, 3, 4, 5]
 
+# Topics the controller should subscribe to for every simulator
 config :intersection_controller, :topics, [
   "/features/lifecycle/simulator/+",
   "/+/+/sensor/+"
 ]
 
+# Elixir representation of the intersection that should be managed
 import_config("traffic_model.exs")

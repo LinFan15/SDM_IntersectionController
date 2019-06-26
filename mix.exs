@@ -7,7 +7,15 @@ defmodule IntersectionController.MixProject do
       version: "0.1.0",
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+
+      # Docs
+      name: "IntersectionController",
+      source_url: "https://github.com/LinFan15/SDM_IntersectionController",
+      docs: [
+        main: "IntersectionController",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -31,7 +39,8 @@ defmodule IntersectionController.MixProject do
   defp deps do
     [
       {:certifi, "~> 2.5"},
-      {:tortoise, "~> 0.9"}
+      {:tortoise, "~> 0.9"},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 end

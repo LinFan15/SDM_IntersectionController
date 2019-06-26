@@ -1,17 +1,23 @@
 use Mix.Config
 
+# Elixir representation of the intersection that should be managed by the controller.
 config :intersection_controller, :traffic_model, %{
+  # user_type + group_id
   "/motor_vehicle/1" => %{
     :items => %{
+      # lights, gates and decks
       "/light/1" => %{
+        # direction of traffic light; G = green, T = transition, R = red
         :type => "RTG"
       }
     },
+    # duration in milliseconds for each phase of the group
     :duration => %{
       :initial => 1000,
       :transition => 4000,
       :end => 6000
     },
+    # groups that shouldn't be activated at the same time as this group
     :excluded => {
       "/foot/1",
       "/cycle/1",
@@ -20,7 +26,9 @@ config :intersection_controller, :traffic_model, %{
       "/motor_vehicle/5",
       "/motor_vehicle/8"
     },
+    # groups that should be activated when this group is activated
     :associated => {},
+    # these sensors have to be low before this group can be activated
     :exception => {}
   },
   "/motor_vehicle/2" => %{
